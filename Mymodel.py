@@ -2,19 +2,22 @@ from arcface_layer import ArcFace
 from tensorflow.keras import regularizers
 from tensorflow.keras import models, layers
 from tensorflow.keras.datasets import mnist
-from attention_block import OneAttentionBlock
+from attention_block import Network_block
 from tensorflow.keras.utils import to_categorical
+import numpy as np
 
 
 (X, y), _ = mnist.load_data()
-y = to_categorical(y, 10)
 
+y = to_categorical(y, 10)
+X = np.array(X)/255
+y = np.array(y)
 
 input_layer = layers.Input(shape=(28, 28, 1))
-y_layer = layers.Input(shape=(10,))
+y_input_layer = layers.Input(shape=(10,))
 
-attention1 = OneAttentionBlock(input_layer, 1)
-attention2 = OneAttentionBlock(attention1, 1)
+attention1 = Network_block(input_layer, 1)
+attention2 = Network_block(attention1, 1)
 
 flatten = layers.Flatten()(attention2)
 
@@ -23,9 +26,9 @@ hidden1 = layers.Dense(150, activation= 'relu')(hidden0)
 
 weight_decay = 1e-4
 
-cf = ArcFace(10, regularizer=regularizers.l2(weight_decay))([hidden1, y_layer])
+cf = ArcFace(10, regularizer=regularizers.l2(weight_decay))([hidden1, y_input_layer])
 
-classifier = models.Model([input_layer, y_layer], cf)
+classifier = models.Model([input_layer, y_input_layer], cf)
 
 classifier.compile(optimizer='adam',
                        loss = 'categorical_crossentropy',
